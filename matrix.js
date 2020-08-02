@@ -52,10 +52,20 @@ class CharTrail {
 }
 
 class Matrix {
-    constructor() {
+    constructor(options = {})
+    // xGap=20, newPerSecond=2, updatesPerSecond=50, minSize=15, maxSize=30)
+    {
+        this.xGap = options.xGap || 20;
+        this.newPerSecond =  options.newPerSecond || 2;
+        this.minSize =  options.minSize || 15;
+        this.maxSize =  options.maxSize || 30;
+        this.updatesPerSecond = options.updatesPerSecond || 50;
+
         this.trails = [];
         this.lanesInUse = [];
-        this.xGap = 15;
+        this.expected = Math.floor(1000/this.newPerSecond); // Expected ms until new trail.
+        this.updateAfterMs = Math.floor(1000 / this.updatesPerSecond);
+        this.msSinceLastUpdate = 0;
     }
 
     newTrail(trailSize) {
@@ -63,7 +73,6 @@ class Matrix {
         while (true) {
             const numberOfLanes = Math.floor(document.documentElement.scrollWidth / this.xGap);
             
-            console.log(numberOfLanes);
             l = randomIntFromInterval(0, numberOfLanes);
 
             if(!(this.lanesInUse.includes(l))) {
@@ -76,24 +85,26 @@ class Matrix {
             }
         }
     }
-    update() {
-        console.log(this.lanesInUse);
-        //TODO: replace magic numbers
-        if (randomIntFromInterval(1, 10) === 1) {
-            this.newTrail(randomIntFromInterval(10, 30));
+    update(delta) {
+        if (randomIntFromInterval(0, this.expected) <= delta) {
+            this.newTrail(randomIntFromInterval(this.minSize, this.maxSize));
         }
 
-        for (const trail of this.trails) {
-            trail.update();
-
-            if(trail.dead()) {
-                let index = this.trails.indexOf(trail);
-                if (index > -1) {
-                    this.trails.splice(index, 1);
-                    index = this.lanesInUse.indexOf(trail.x / this.xGap);
+        this.msSinceLastUpdate += delta;
+        if(this.msSinceLastUpdate >= this.updateAfterMs) {
+            this.msSinceLastUpdate = 0;
+            for (const trail of this.trails) {
+                trail.update();
+    
+                if(trail.dead()) {
+                    let index = this.trails.indexOf(trail);
                     if (index > -1) {
-                        this.lanesInUse.splice(index, 1);
-                    } 
+                        this.trails.splice(index, 1);
+                        index = this.lanesInUse.indexOf(trail.x / this.xGap);
+                        if (index > -1) {
+                            this.lanesInUse.splice(index, 1);
+                        } 
+                    }
                 }
             }
         }
@@ -115,8 +126,10 @@ class Matrix {
 }
 
 let c = new CharTrail(100);
-m = new Matrix();
+m = new Matrix({newPerSecond:10, updatesPerSecond:40});
 let counter = 0;
+let lastTime = Date.now();
+let newTime = Date.now();
 
 
 initMatrixAnimation();
@@ -131,13 +144,11 @@ function initMatrixAnimation() {
 }
 
 function step() {
-    // TODO: time
-    counter++;
-    if (counter >= 5) {
-        counter = 0;
-        m.update();
-        m.draw();
-    }
+    newTime = Date.now();
+    delta = newTime-lastTime
+    lastTime = newTime;
+    m.update(delta);
+    m.draw();
     
     window.requestAnimationFrame(step);
 }
