@@ -68,6 +68,11 @@ class Matrix {
         this.msSinceLastUpdate = 0;
     }
 
+    set spawnRate(rate) {
+        this.newPerSecond = rate;
+        this.expected = Math.floor(1000/this.newPerSecond);
+    }
+
     newTrail(trailSize) {
         let l;
         while (true) {
@@ -133,7 +138,7 @@ let newTime = Date.now();
 
 
 initMatrixAnimation();
-
+initSlider();
 
 
 function initMatrixAnimation() { 
@@ -175,4 +180,16 @@ function change_canvas_size() {
     canvas.width = 0;
     canvas.width = window.innerWidth;
     canvas.height = document.documentElement.scrollHeight;
+}
+
+function initSlider() {
+    document.getElementById("slider").addEventListener("change", sliderChange);
+    document.getElementById("slider-label").innerHTML = `spawn rate: ${slider.value}`;
+}
+
+function sliderChange() {
+    if (m) {
+        m.spawnRate = parseInt(this.value);
+        document.getElementById("slider-label").innerHTML = `spawn rate: ${slider.value}`;
+    }
 }
