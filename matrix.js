@@ -53,7 +53,6 @@ class CharTrail {
 
 class Matrix {
     constructor(options = {})
-    // xGap=20, newPerSecond=2, updatesPerSecond=50, minSize=15, maxSize=30)
     {
         this.xGap = options.xGap || 20;
         this.newPerSecond =  options.newPerSecond || 2;
@@ -73,6 +72,12 @@ class Matrix {
         this.expected = Math.floor(1000/this.newPerSecond);
     }
 
+    set speedRate(rate) {
+        this.updatesPerSecond = rate;
+        this.updateAfterMs = Math.floor(1000 / this.updatesPerSecond);
+    }
+
+    // TODO: Maybe change Algo (too much looping when near the max number of lanes?).
     newTrail(trailSize) {
         let l;
         while (true) {
@@ -91,24 +96,30 @@ class Matrix {
         }
     }
     update(delta) {
+        //TODO: BUG: add another counter for creation.
         if (randomIntFromInterval(0, this.expected) <= delta) {
             this.newTrail(randomIntFromInterval(this.minSize, this.maxSize));
         }
-
+        // console.log(this.msSinceLastUpdate += delta); // Test.
         this.msSinceLastUpdate += delta;
         if(this.msSinceLastUpdate >= this.updateAfterMs) {
-            this.msSinceLastUpdate = 0;
-            for (const trail of this.trails) {
-                trail.update();
-    
-                if(trail.dead()) {
-                    let index = this.trails.indexOf(trail);
-                    if (index > -1) {
-                        this.trails.splice(index, 1);
-                        index = this.lanesInUse.indexOf(trail.x / this.xGap);
+            // how many?
+            const howManyUpdates = Math.floor(this.msSinceLastUpdate / this.updateAfterMs)
+            this.msSinceLastUpdate = this.msSinceLastUpdate % this.updateAfterMs;
+            console.log(this.msSinceLastUpdate);
+            for (let i = 0; i < howManyUpdates; i++) {
+                for (const trail of this.trails) {
+                    trail.update();
+        
+                    if(trail.dead()) {
+                        let index = this.trails.indexOf(trail);
                         if (index > -1) {
-                            this.lanesInUse.splice(index, 1);
-                        } 
+                            this.trails.splice(index, 1);
+                            index = this.lanesInUse.indexOf(trail.x / this.xGap);
+                            if (index > -1) {
+                                this.lanesInUse.splice(index, 1);
+                            } 
+                        }
                     }
                 }
             }
@@ -138,7 +149,7 @@ let newTime = Date.now();
 
 
 initMatrixAnimation();
-initSlider();
+initSliders();
 
 
 function initMatrixAnimation() { 
@@ -182,14 +193,30 @@ function change_canvas_size() {
     canvas.height = document.documentElement.scrollHeight;
 }
 
-function initSlider() {
-    document.getElementById("slider").addEventListener("change", sliderChange);
-    document.getElementById("slider-label").innerHTML = `spawn rate: ${slider.value}`;
+function initSliders() {
+    const spawnSlider = document.getElementById("spawn-slider");
+    spawnSlider.addEventListener("input", spawnSliderChange);
+    spawnSlider.value = m.newPerSecond;
+    document.getElementById("spawn-slider-label").innerHTML = `spawn rate: ${m.newPerSecond} per second`;
+
+    const speedSlider = document.getElementById("speed-slider");
+    speedSlider.addEventListener("input", speedSliderChange);
+    speedSlider.value = m.updatesPerSecond;
+    document.getElementById("speed-slider-label").innerHTML = `speed rate: ${m.updatesPerSecond} per second`;
 }
 
-function sliderChange() {
+function spawnSliderChange() {
     if (m) {
         m.spawnRate = parseInt(this.value);
-        document.getElementById("slider-label").innerHTML = `spawn rate: ${slider.value}`;
+        const spawnSlider = document.getElementById("spawn-slider");
+        document.getElementById("spawn-slider-label").innerHTML = `spawn rate: ${spawnSlider.value} per second`;
+    }
+}
+
+function speedSliderChange() {
+    if (m) {
+        m.speedRate = parseInt(this.value);
+        const speedSlider = document.getElementById("speed-slider");
+        document.getElementById("speed-slider-label").innerHTML = `speed rate: ${speedSlider.value} per second`;
     }
 }
