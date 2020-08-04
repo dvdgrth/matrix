@@ -1,3 +1,5 @@
+// TODO: Look for divisions by zero.
+
 class CharTrail {
     constructor(x, trailSize=20) {
         this.x = x;
@@ -65,6 +67,9 @@ class Matrix {
         this.expected = Math.floor(1000/this.newPerSecond); // Expected ms until new trail.
         this.updateAfterMs = Math.floor(1000 / this.updatesPerSecond);
         this.msSinceLastUpdate = 0;
+
+        this.debugCounterTime = 0;
+        this.debugCounterSpawns = 0;
     }
 
     set spawnRate(rate) {
@@ -77,8 +82,18 @@ class Matrix {
         this.updateAfterMs = Math.floor(1000 / this.updatesPerSecond);
     }
 
+    debugUpdate(delta) {
+        this.debugCounterTime += delta;
+        if(this.debugCounterTime >= 1000) {
+            console.log(this.debugCounterSpawns);
+            this.debugCounterTime = 0;
+            this.debugCounterSpawns = 0;
+        }
+    }
+
     // TODO: Maybe change Algo (too much looping when near the max number of lanes?).
     newTrail(trailSize) {
+        this.debugCounterSpawns += 1;
         let l;
         while (true) {
             const numberOfLanes = Math.floor(document.documentElement.scrollWidth / this.xGap);
@@ -95,18 +110,35 @@ class Matrix {
             }
         }
     }
+
     update(delta) {
-        //TODO: BUG: add another counter for creation.
-        if (randomIntFromInterval(0, this.expected) <= delta) {
-            this.newTrail(randomIntFromInterval(this.minSize, this.maxSize));
+        this.createNewTrails(delta) 
+        this.debugUpdate(delta);
+        this.updateTrails(delta)
+    }
+
+    createNewTrails(delta) {
+        // TODO: Double check for bugs. Especially the lower ranges.
+        if (( this.newPerSecond * delta) < 1000) {
+            const threshold = delta * this.newPerSecond;
+            if(randomIntFromInterval(1, 1000) <= threshold) {
+                this.newTrail(randomIntFromInterval(this.minSize, this.maxSize));
+            }
+        } else {
+            const howManyTries = 2 * Math.floor((this.newPerSecond * delta) / 1000);
+            for (let i = 0; i < howManyTries; i++) {
+                if(randomIntFromInterval(0, 1) === 1) {
+                    this.newTrail(randomIntFromInterval(this.minSize, this.maxSize));
+                }         
+            }
         }
-        // console.log(this.msSinceLastUpdate += delta); // Test.
+    }
+
+    updateTrails(delta) {
         this.msSinceLastUpdate += delta;
         if(this.msSinceLastUpdate >= this.updateAfterMs) {
-            // how many?
-            const howManyUpdates = Math.floor(this.msSinceLastUpdate / this.updateAfterMs)
+            const howManyUpdates = Math.floor(this.msSinceLastUpdate / this.updateAfterMs);
             this.msSinceLastUpdate = this.msSinceLastUpdate % this.updateAfterMs;
-            console.log(this.msSinceLastUpdate);
             for (let i = 0; i < howManyUpdates; i++) {
                 for (const trail of this.trails) {
                     trail.update();
@@ -125,16 +157,13 @@ class Matrix {
             }
         }
     }
+
     draw() {
         let canvas = document.querySelector("canvas");
         let ctx = canvas.getContext("2d");
         ctx.fillStyle = "#FF8717";
-        //   ctx.fillStyle = "#FD5F00";
         ctx.font = "20px Arial";
-        // ctx.shadowColor = "#ffc19b";
-        // ctx.shadowBlur = 50;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-
         for (const trail of this.trails) {
             trail.draw(ctx);
         }
@@ -169,7 +198,7 @@ function step() {
     window.requestAnimationFrame(step);
 }
 
-function randomIntFromInterval(min, max) // min and max included
+function randomIntFromInterval(min, max) // Min and max included.
 {
     return Math.floor(Math.random() * (max - min + 1) + min);
 }
