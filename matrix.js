@@ -170,21 +170,11 @@ class Matrix {
     }
 }
 
-let c = new CharTrail(100);
-m = new Matrix({newPerSecond:10, updatesPerSecond:40});
-let counter = 0;
-let lastTime = Date.now();
-let newTime = Date.now();
-
-
-initMatrixAnimation();
-initSliders();
-
-
 function initMatrixAnimation() { 
     window.addEventListener('resize', change_canvas_size);
     window.addEventListener('orientationchange', change_canvas_size);
     change_canvas_size();
+    lastTime = Date.now();
     window.requestAnimationFrame(step);
 }
 
@@ -216,7 +206,7 @@ function get_random_char() {
 }
 
 function change_canvas_size() {
-    var canvas = document.querySelector("canvas");
+    var canvas = document.getElementById("matrix");
     canvas.width = 0;
     canvas.width = window.innerWidth;
     canvas.height = document.documentElement.scrollHeight;
@@ -249,3 +239,10 @@ function speedSliderChange() {
         document.getElementById("speed-slider-label").innerHTML = `speed rate: ${speedSlider.value} per second`;
     }
 }
+
+
+const m = new Matrix({newPerSecond:10, updatesPerSecond:40});
+let lastTime;
+let newTime;
+initMatrixAnimation();
+initSliders();
