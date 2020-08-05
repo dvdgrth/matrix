@@ -118,7 +118,7 @@ class Matrix {
     }
 
     createNewTrails(delta) {
-        // TODO: Double check for bugs. Especially the lower ranges.
+        // TODO: Double check for bugs. Especially the lower ranges. 
         if (( this.newPerSecond * delta) < 1000) {
             const threshold = delta * this.newPerSecond;
             if(randomIntFromInterval(1, 1000) <= threshold) {
@@ -212,6 +212,7 @@ function change_canvas_size() {
     canvas.height = document.documentElement.scrollHeight;
 }
 
+// TODO: Too much repetition here?
 function initSliders() {
     const spawnSlider = document.getElementById("spawn-slider");
     spawnSlider.addEventListener("input", spawnSliderChange);
@@ -222,24 +223,58 @@ function initSliders() {
     speedSlider.addEventListener("input", speedSliderChange);
     speedSlider.value = m.updatesPerSecond;
     document.getElementById("speed-slider-label").innerHTML = `speed rate: ${m.updatesPerSecond} per second`;
+
+    const minSlider = document.getElementById("min-slider");
+    minSlider.addEventListener("input", minSliderChange);
+    minSlider.value = m.minSize;
+    document.getElementById("min-slider-label").innerHTML = `min length: ${m.minSize} chars`;
+
+    const maxSlider = document.getElementById("max-slider");
+    maxSlider.addEventListener("input", maxSliderChange);
+    maxSlider.addEventListener("change", maxSliderChange);
+    maxSlider.value = m.maxSize;
+    document.getElementById("max-slider-label").innerHTML = `max length: ${m.maxSize} chars`;
 }
 
 function spawnSliderChange() {
     if (m) {
         m.spawnRate = parseInt(this.value);
-        const spawnSlider = document.getElementById("spawn-slider");
-        document.getElementById("spawn-slider-label").innerHTML = `spawn rate: ${spawnSlider.value} per second`;
+        document.getElementById("spawn-slider-label").innerHTML = `spawn rate: ${m.newPerSecond} per second`;
     }
 }
 
 function speedSliderChange() {
     if (m) {
         m.speedRate = parseInt(this.value);
-        const speedSlider = document.getElementById("speed-slider");
-        document.getElementById("speed-slider-label").innerHTML = `speed rate: ${speedSlider.value} per second`;
+        document.getElementById("speed-slider-label").innerHTML = `speed rate: ${m.updatesPerSecond} per second`;
     }
 }
 
+function minSliderChange() {
+    if (m) {
+        let newMinValue = parseInt(this.value);
+        if (newMinValue > document.getElementById("max-slider").value) {
+            document.getElementById("min-slider-label").innerHTML = `min length: ${m.minSize} chars (MUST BE <= MAX VALUE)`;
+            this.value = m.minSize;
+            return;
+        }
+        m.minSize = parseInt(this.value);
+        document.getElementById("min-slider-label").innerHTML = `min length: ${m.minSize} chars`;
+    }
+}
+
+function maxSliderChange() {
+    if (m) {
+        let newMaxValue = parseInt(this.value);
+        if (newMaxValue < document.getElementById("min-slider").value) {
+            document.getElementById("max-slider-label").innerHTML = `max length: ${m.maxSize} chars (MUST BE >= MIN VALUE)`;
+            this.value = m.maxSize;
+            return;
+        }
+        m.maxSize = parseInt(this.value);
+        document.getElementById("max-slider-label").innerHTML = `max length: ${m.maxSize} chars`;
+    }
+}
 
 const m = new Matrix({newPerSecond:10, updatesPerSecond:40});
 let lastTime;
