@@ -1,17 +1,18 @@
 // TODO: Look for divisions by zero.
 
 class CharTrail {
-    constructor(x, trailSize=20) {
+    constructor(x, trailSize=20, charType="binary") {
         this.x = x;
         this.y = 0;
         this.chars = [];
         this.gap = 25;
         this.trailSize = trailSize;
         this.age = 0;
+        this.charType = charType;
     }
 
     createNewChar() {
-        return get_random_char();
+        return get_random_char(this.charType);
     }
 
     mature() {
@@ -61,6 +62,7 @@ class Matrix {
         this.minSize =  options.minSize || 15;
         this.maxSize =  options.maxSize || 30;
         this.updatesPerSecond = options.updatesPerSecond || 50;
+        this.charTypes = "binary";
 
         this.trails = [];
         this.lanesInUse = [];
@@ -101,7 +103,7 @@ class Matrix {
             l = randomIntFromInterval(0, numberOfLanes);
 
             if(!(this.lanesInUse.includes(l))) {
-                this.trails.push(new CharTrail(l * this.xGap, trailSize));
+                this.trails.push(new CharTrail(l * this.xGap, trailSize, this.charTypes));
                 this.lanesInUse.push(l);
                 break;
             }
@@ -197,19 +199,51 @@ function get_random_index() {
     return randomIntFromInterval(0, char_list.length - 1);
 }
 
-function get_random_char() {
+function get_random_char(charType="binary") {
     // return String.fromCharCode(randomIntFromInterval(33, 126)); // ascii
     // return String.fromCharCode(randomIntFromInterval(48, 57)); // 0-9
-    return String.fromCharCode(randomIntFromInterval(48, 49)); // 0,1
+    // return String.fromCharCode(randomIntFromInterval(48, 49)); // 0,1
     // return String.fromCharCode(randomIntFromInterval(0, 10000)); // unicode
     // return String.fromCharCode(randomIntFromInterval(65, 90)); // A-Z
+
+    switch(charType) {
+        case "binary":
+            return String.fromCharCode(randomIntFromInterval(48, 49)); // 0,1
+            break
+        case "ascii":
+            return String.fromCharCode(randomIntFromInterval(33, 126)); // ascii
+            break
+        case "unicode":
+            return String.fromCharCode(randomIntFromInterval(0, 10000)); // unicode
+            break
+        case "numbers":
+            return String.fromCharCode(randomIntFromInterval(48, 57)); // 0-9
+            break
+        case "characters":
+            return String.fromCharCode(randomIntFromInterval(65, 90)); // A-Z
+            break
+    }
 }
+
+
 
 function change_canvas_size() {
     var canvas = document.getElementById("matrix");
     canvas.width = 0;
     canvas.width = window.innerWidth;
     canvas.height = document.documentElement.scrollHeight;
+}
+
+function initRadios() {
+    document.getElementById("binary").addEventListener("click", radioClicked);
+    document.getElementById("ascii").addEventListener("click", radioClicked);
+    document.getElementById("unicode").addEventListener("click", radioClicked);
+    document.getElementById("numbers").addEventListener("click", radioClicked);
+    document.getElementById("characters").addEventListener("click", radioClicked);
+}
+
+function radioClicked() {
+    m.charTypes = this.value;
 }
 
 // TODO: Too much repetition here?
@@ -276,8 +310,9 @@ function maxSliderChange() {
     }
 }
 
-const m = new Matrix({newPerSecond:10, updatesPerSecond:40});
+const m = new Matrix({newPerSecond:30, updatesPerSecond:35});
 let lastTime;
 let newTime;
 initMatrixAnimation();
 initSliders();
+initRadios();
