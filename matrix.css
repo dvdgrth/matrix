@@ -1,8 +1,15 @@
+body  {
+    color: #FF8717;
+    background-color: black;
+}
+
 #matrix {
-    position: absolute;
+    position: fixed;
     left: 0;
     top: 0;
-    width: auto;
-    height: auto;
     z-index: -1;
+    height: 100%;
+    width: 100%;
 }
+
+
