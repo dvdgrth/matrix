@@ -37,7 +37,7 @@ class CharTrail {
         }
 
         for (let i = 0; i < this.chars.length; i++) {
-            if (randomIntFromInterval(0, 10) == 0) {
+            if (randomIntFromInterval(0, 8) == 0) {
                 this.chars[i] = this.createNewChar();
             }
         }
